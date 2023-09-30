@@ -1,0 +1,248 @@
+import React, { useEffect, useState } from 'react';
+import { Alert, View ,StyleSheet, Text, ImageBackground, SafeAreaView, Image,  TextInput,  FlatList, ScrollView, TouchableOpacity  } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/FontAwesome';
+
+const image = {uri: 'https://i.pinimg.com/564x/e7/0c/98/e70c9896709e02e9c92c2bfa1639a78f.jpg'};
+
+export function ChatWithSupplier({route,navigation}){
+    
+    
+    
+    const[chatText,setChatText]=useState();
+    
+    const [chatHistory,setChatHistory]=useState([]);
+    //Alert.alert("Name",userJSObject.fname);
+   
+    async function sendRequest(){
+      const form=new FormData();   
+      var userJsonText=await AsyncStorage.getItem("manager");
+      var userJSObject=JSON.parse(userJsonText);
+      //Alert.alert("Message",route.params.id);
+      form.append("id1",userJSObject.id);
+      form.append("id2",route.params.id);
+      form.append("cid",userJSObject.category_id);
+
+      var request=new XMLHttpRequest();
+      request.onreadystatechange=function(){
+        if(request.readyState==4&&request.status==200){
+          var responseText=request.responseText;
+          var responseArray=JSON.parse(responseText);
+          setChatHistory(responseArray);
+        }
+      }
+      request.open("POST","http://10.0.2.2/reactNative/iceCream_php/loadChat.php",true);
+      request.send(form);
+    
+    }
+    async function saveChat(){
+      var userJsonText=await AsyncStorage.getItem("manager");
+      var fromUserObject=JSON.parse(userJsonText);
+  
+      var requestObject={
+        "from_user_id":fromUserObject.id,
+        "to_user_id":route.params.id,
+        "msg":chatText,
+      };
+  
+      const formData=new FormData();
+      formData.append('requestJSON',JSON.stringify(requestObject));
+      
+      var request=new XMLHttpRequest();
+      request.onreadystatechange=function(){
+        if(request.readyState==4 && request.status==200){
+          
+        }
+      };
+      request.open('POST','http://10.0.2.2/reactNative/iceCream_php/saveChat.php',true);
+      request.send(formData);
+    }
+    
+    const ui=(
+      
+      <SafeAreaView style={styles.chatWithSupplierMainView}>
+       
+        <ImageBackground source={image} resizeMode="cover">
+          <View style={styles.chatWithSupplierView1}>
+          {/* <Text style={styles.chatWithSupplierText2}>{name}</Text> */}
+         
+          <Image source={{uri:"https://cdn3.iconfinder.com/data/icons/food-and-restaurant-14/512/Restaurant_Image_all-05-512.png"}} style={styles.chatManagerLogo}/>
+          
+        </View> 
+       
+        <ScrollView style={styles.chatSendView2}>
+          <FlatList data={chatHistory} renderItem={chatItem} style={styles.flatlist1} />
+        </ScrollView>
+        <View style={styles.chatsendView}>
+          <TextInput style={styles.chatTextinput1} 
+          placeholder="Enter your message" 
+          autoCorrect={false}
+          onChangeText={setChatText}
+          />
+          <TouchableOpacity onPress={saveChat}>
+          <Icon name="send" size={18} style={styles.chatSendIcon}/>
+          </TouchableOpacity>
+          
+        </View>
+      
+        </ImageBackground>
+        <View style={styles.chatSendView3}>
+              <View style={styles.chatSendView4}></View>
+        </View> 
+      </SafeAreaView>
+    );
+
+    function start(){
+      setInterval(sendRequest,5000);
+    }
+    useEffect(start,[]);
+    return ui;
+    
+    
+  }
+  function chatItem({item}){
+    
+    const itemUI=(
+      <View>
+        {item.side=="right"?<View style={styles.chatItemView1}><Text style={styles.chatItemText4}>{item.time}</Text></View>:null} 
+         
+         <View style={item.side=="right"?styles.chatViewRight:styles.chatViewLeft}>
+     
+      <Text style={styles.chatItemText3}>{item.msg}</Text>
+      <View style={styles.chatItemView3}>
+      
+       {item.side=="right"?<Text>{item.status}</Text>:null} 
+      </View>
+      </View>
+      </View>
+     
+    );
+    return itemUI;
+  }
+  const styles=StyleSheet.create({
+    chatManagerLogo:{
+        width:100,
+        height:100,
+        borderRadius:20,
+      },
+      chatItemView1:{
+        alignItems:"flex-end",
+      },
+      chatItemText4:{
+        marginRight:10,
+      },
+      chatWithSupplierText2:{
+        fontWeight:"bold",
+        fontSize:20,
+        
+      },
+      chatWithSupplierText1:{
+        fontWeight:"bold",
+        fontFamily:"Oswald-Medium",
+        fontSize:23,
+        color:"#4F2D47",
+      },
+      chatItemView3:{
+        flexDirection:"row",
+        //alignItems:"flex-end",
+        justifyContent:"flex-end",
+        paddingTop:5,
+      },
+      chatItemText3:{
+        fontSize:18,
+        color:"black",
+      },
+      chatViewLeft:{
+        alignSelf:"flex-start",
+        borderRadius:10,
+        backgroundColor:"rgb(135,206,250)",
+        paddingHorizontal:15,
+        marginTop:5,
+        width:250,
+        padding:10,
+      },
+      chatViewRight:{
+        alignSelf:"flex-end",
+        borderRadius:10,
+        backgroundColor:"#d8bfd8",
+        width:250,
+        paddingHorizontal:15,
+        marginTop:5,
+        padding:10,
+      },
+      //CHAT ITEM
+      //CHAT 
+      chatSendView4:{
+        backgroundColor:"#800080",
+        width:"40%",
+        height:2,
+      },
+      chatSendView3:{
+        //padding:1,
+        //paddingTop:10,
+        paddingBottom:5,
+        alignItems:"center",
+      },
+      chatSendView2:{
+        backgroundColor:"white",
+        height:490,
+      },
+      chatSendIcon:{
+        paddingHorizontal:8,
+        color:"black",
+      },
+      chatTextinput1:{
+        width:"93%",
+        height:40,
+        borderStyle:"solid",
+        borderWidth:1,
+        borderColor:"black",
+        borderRadius:10,
+        fontSize:16,
+    
+      },
+      chatsendView:{
+        padding:10,
+        flexDirection:"row",
+        alignItems:"center",
+      },
+      supplierChatSendIcon:{
+        paddingHorizontal:8,
+        color:"black",
+      },
+      supplierChatTextInput1:{
+        width:"93%",
+        height:40,
+        borderStyle:"solid",
+        borderWidth:1,
+        borderColor:"black",
+        borderRadius:10,
+        fontSize:16,
+      },
+      supplierChatSendView:{
+        padding:10,
+        flexDirection:"row",
+        alignItems:"center",
+      },
+      flatlist1:{
+        padding:6,
+      },
+      supplierImage:{
+        height:80,
+        width:80,
+        borderRadius:45,
+      },
+    
+      chatWithSupplierMainView:{
+        flex:1,
+        //alignItems:"center",
+        //justifyContent:"center",
+      },
+      chatWithSupplierView1:{
+        justifyContent:"center",
+        alignItems:"center",
+        paddingTop:10,
+        paddingBottom:10,
+        padding:20,
+      },
+  });
